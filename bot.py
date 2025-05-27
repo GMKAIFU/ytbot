@@ -2,10 +2,8 @@ import os
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 from huggingface_hub import InferenceApi
-from dotenv import load_dotenv
 
-# Load env variables locally (not needed on Railway)
-load_dotenv()
+# No local dotenv loading because environment variables are set directly on Railway or GitHub Actions, etc.
 
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 HF_API_KEY = os.getenv("HF_API_KEY")
@@ -73,8 +71,9 @@ async def generate(update: Update, context: ContextTypes.DEFAULT_TYPE):
     prompt = build_prompt(platform, topic)
 
     try:
-        response = client(inputs=prompt, max_new_tokens=300)
-        # HuggingFace returns a list of dict with "generated_text"
+        # Call Hugging Face API, note: max_new_tokens param not supported directly here
+        response = client(inputs=prompt)
+        # response is list of dicts [{ "generated_text": "..." }]
         generated_text = response[0]["generated_text"]
         await update.message.reply_text(generated_text)
     except Exception as e:
@@ -90,4 +89,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
